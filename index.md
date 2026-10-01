@@ -8,4 +8,4 @@ nav_order: 1
 </p>
 
 # **Welcome to the CorgiSNPs Documentation Page!**
-CorgiSNPs is a fungal genomic surviellance workflow. Select a workflow version to get started!
+CorgiSNPs is a fungal genomic surveillance workflow. Select a workflow version to get started!

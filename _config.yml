@@ -2,14 +2,14 @@ title: CorgiSNPs Docs
 description: Documentation for the CorgiSNPs pipeline
 theme: just-the-docs
 
-url: https://github.com/nw-page/corgisnps-docs
+url: https://github.com/NW-PaGe/corgisnps-docs
 
 baseurl: "/corgisnps-docs"
 
 favicon_ico: "/assets/media/corgisnps_logo.ico"
 
 aux_links:
-  BigBacter GitHub: https://github.com/nw-page/corgisnps
+  CorgiSNPs GitHub: https://github.com/NW-PaGe/CorgiSNPs
 
 callouts:
   note:
@@ -26,4 +26,7 @@ callouts:
     color: red
   example:
     title: Example
+    color: yellow
+  todo:
+    title: TODO
     color: yellow
