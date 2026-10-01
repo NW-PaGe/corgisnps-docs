@@ -57,6 +57,9 @@ Per-sample consensus genomes, all built against the same reference genome for th
 |:-|:-|
 |`${sample}.fa.gz`|Consensus genome produced by `bcftools consensus` with low quality sites masked (see [Overview]({{ site.baseurl }}/docs/v1.0/pages/overview/#consensus-genome))|
 
+{: .note}
+Consensus genomes reflect the variant calling settings in effect when they were created. Changing a species' or subtype's [analysis settings]({{ site.baseurl }}/docs/v1.0/pages/reference_sets/#step-5-set-analysis-settings-recommended) does not update genomes already in the database. Re-run those samples if they need to reflect the new settings.
+
 {: .todo}
 Describe what happens to existing database entries when a subtype's reference assembly is changed in the reference set, and the recommended procedure (e.g., start a new database or re-run historical samples).
 

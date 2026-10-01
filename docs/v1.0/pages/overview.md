@@ -79,14 +79,20 @@ Each sample is summarized and evaluated against the following criteria. Samples 
 |Read quality|Q30 rate after filtering ≥ `min_q30_rate_qc` (default: `0.8`)|
 |Species|A species was supplied or assigned|
 |Subtype|A subtype was supplied or assigned|
-|Estimated depth|Total bases after filtering ÷ NCBI mean genome length for the species ≥ `min_depth_qc` (default: `30`)|
-|Assembly length|\|z-score\| of assembly length vs. NCBI genomes for the species < `max_z_score_qc` (default: `2.58`)|
-|Assembly GC|\|z-score\| of assembly GC content vs. NCBI genomes for the species < `max_z_score_qc` (default: `2.58`)|
+|Estimated depth|Total bases after filtering ÷ expected genome length for the species ≥ `min_depth_qc` (default: `30`)|
+|Assembly length|Assembly length within the species' length range|
+|Assembly GC|Assembly GC content within the species' GC range|
 
-Genome length and GC statistics come from a bundled summary of fungal genomes hosted on NCBI (`ncbi_stats`). Z-scores are only calculated when at least 3 NCBI genomes are available for the species; otherwise the assembly checks are skipped.
+The length and GC ranges are chosen separately for each species:
+
+1. **Reference set** - the `length_range` / `gc_range` set on the species in the [reference set manifest]({{ site.baseurl }}/docs/v1.0/pages/reference_sets/#step-6-set-automated-qc-ranges-optional), when present.
+2. **NCBI statistics** - otherwise, the range from a bundled summary of fungal genomes hosted on NCBI (`ncbi_stats`): the mean ± 2.58 standard deviations of the species' NCBI genomes. These ranges are only used when the species has at least 3 NCBI genomes.
+3. **Neither** - the check is reported as undetermined and does not fail the sample.
+
+The expected genome length for estimated depth is the species' NCBI mean genome length, or the midpoint of its reference set `length_range` when the species is not in the NCBI statistics. Species are found in the NCBI statistics by GAMBIT taxid, by name, or by any of the species' aliases in the reference set (e.g., *Candida auris* for *Candidozyma auris*). The source of each sample's ranges is reported in the `qc_range_source` summary column.
 
 {: .important}
-Estimated depth requires the species to be present in the NCBI statistics file. If it is not, the sample's depth is undetermined and the sample fails QC. You can bypass this using `--ignore_qc true` - use with caution!
+Estimated depth requires the species to be in the NCBI statistics file or to have a `length_range` in the reference set. If neither applies, the sample's depth is undetermined and the sample fails QC. You can bypass this using `--ignore_qc true` - use with caution!
 
 ---
 
@@ -98,7 +104,7 @@ Reads are aligned to the reference assembly for the sample's species and subtype
 
 ## Calling & Filtering Variants
 
-Variants are called using [FreeBayes](https://github.com/freebayes/freebayes) with the ploidy set in the reference set and a coverage cap of `limit_coverage` (default: `100`). Calls are then tagged with [bcftools](https://samtools.github.io/bcftools/) filters:
+Variants are called using [FreeBayes](https://github.com/freebayes/freebayes) with the ploidy set in the reference set and a coverage cap of `limit_coverage` (default: `100`). Calls are then tagged with [bcftools](https://samtools.github.io/bcftools/) filters. The thresholds come from the sample's species or subtype in the [reference set]({{ site.baseurl }}/docs/v1.0/pages/reference_sets/#step-5-set-analysis-settings-recommended), falling back to the run-level parameters for any the reference set doesn't set. Defaults are shown in parentheses:
 
 |Filter tag|Condition (default)|
 |:-|:-|
@@ -111,7 +117,7 @@ Variants are called using [FreeBayes](https://github.com/freebayes/freebayes) wi
 |`read_pos_bias`|Allele seen only on one side of reads or read position bias score > `max_read_pos_bias` (`30`)|
 
 {: .important}
-`min_allele_fraction` applies to all samples in a run. The pipeline's suggested values are `0.8` for haploid organisms and `0.25` for diploid / triploid organisms.
+`min_allele_fraction` should match the species' ploidy. The suggested values are `0.8` for haploid organisms and `0.25` for diploid / triploid organisms. Set it per species in the [reference set]({{ site.baseurl }}/docs/v1.0/pages/reference_sets/#step-5-set-analysis-settings-recommended) so that species of different ploidy can share a run.
 
 ## Consensus Genome
 
@@ -134,6 +140,8 @@ Samples are handled in one of three ways:
 # Phylogenetic Analysis
 
 Samples are grouped by species and subtype. If a CorgiSNPs database (`--db`) exists, consensus genomes saved from previous runs for the same species and subtype are added to the analysis.
+
+The thresholds below (`min_genome_fraction`, `min_core_fraction`, `partition_distance`, `strong_link_threshold`, `inter_link_threshold`) are taken from the species or subtype in the [reference set]({{ site.baseurl }}/docs/v1.0/pages/reference_sets/#step-5-set-analysis-settings-recommended), falling back to the run-level parameters. All samples in one species / subtype group share the same values.
 
 ## Defining the Core Genome
 

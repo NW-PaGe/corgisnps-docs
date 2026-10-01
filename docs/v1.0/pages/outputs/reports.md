@@ -273,12 +273,13 @@ The sample and run summary files contain the following columns.
 | `species` | Species (from samplesheet or GAMBIT) |
 | `subtype` | Subtype (from samplesheet or subtyping) |
 | `subtype_ani` | ANI (%) to the closest subtype reference |
-| `estimated_depth` | Total bases after filtering divided by the NCBI mean genome length for the species |
+| `estimated_depth` | Total bases after filtering divided by the species' expected genome length (NCBI mean, or the midpoint of the reference set `length_range`) |
 | `denovo_contigs` | Number of contigs in the de novo assembly |
 | `denovo_length` | Length of the de novo assembly (bp) |
-| `denovo_length_z` | Z-score of the assembly length relative to NCBI genomes for the species |
+| `denovo_length_range` | Acceptable assembly length for the species (`min-max`, bp); blank if undetermined |
 | `denovo_gc` | GC content (%) of the de novo assembly |
-| `denovo_gc_z` | Z-score of the assembly GC content relative to NCBI genomes for the species |
+| `denovo_gc_range` | Acceptable assembly GC content for the species (`min-max`, %); blank if undetermined |
+| `qc_range_source` | Where the ranges came from: `manifest` (the [reference set]({{ site.baseurl }}/docs/v1.0/pages/reference_sets/#step-6-set-automated-qc-ranges-optional)), `ncbi` (`--ncbi_stats`), or one per metric when they differ (e.g., `length: manifest; gc: ncbi`) |
 | `*_after_filtering` / `*_before_filtering` | fastp read statistics: total reads, total bases, Q30 bases, Q30 rate, mean read 1 / read 2 length, and GC content |
 | `amr_variants_target` | Moderate / high impact changes within a named resistance target region, formatted as `gene(region):mutation` |
 | `amr_variants_other` | Moderate / high impact changes elsewhere in a resistance target gene, formatted as `gene:mutation` |
@@ -287,8 +288,8 @@ The species / subtype summary adds the following columns:
 
 | Column | Description |
 |--------|-------------|
-| `strong_links` | Samples within [`strong_link_threshold`]({{ site.baseurl }}/docs/v1.0/pages/inputs/#--strong_link_threshold) SNPs of this sample |
-| `inter_links` | Samples within [`inter_link_threshold`]({{ site.baseurl }}/docs/v1.0/pages/inputs/#--inter_link_threshold) SNPs of this sample (and not strongly linked) |
+| `strong_links` | Samples within [`strong_link_threshold`]({{ site.baseurl }}/docs/v1.0/pages/reference_sets/#step-5-set-analysis-settings-recommended) SNPs of this sample |
+| `inter_links` | Samples within [`inter_link_threshold`]({{ site.baseurl }}/docs/v1.0/pages/reference_sets/#step-5-set-analysis-settings-recommended) SNPs of this sample (and not strongly linked) |
 | `partition` | Tree partition assigned to the sample. _NOTE: partitions are subject to change depending on which samples are included in the analysis!_ |
 
 {: .todo}

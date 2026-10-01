@@ -21,7 +21,8 @@ A **reference set** tells CorgiSNPs which species it can analyze, how each speci
 Each species in the reference set is used for:
 
 - **Subtyping** - samples are assigned the subtype of the reference assembly with the highest ANI, provided it meets the species' `subtype_ani` threshold
-- **Variant calling** - reads are aligned to the reference assembly for the sample's subtype, and variants are called using the species' `ploidy`
+- **Variant calling** - reads are aligned to the reference assembly for the sample's subtype, and variants are called and filtered using the species' `ploidy` and [analysis settings](#step-5-set-analysis-settings-recommended)
+- **Phylogenetic analysis** - core genome, linkage and tree partitioning thresholds come from the species' or subtype's [analysis settings](#step-5-set-analysis-settings-recommended)
 - **Antifungal resistance** (optional) - variants are annotated using the reference annotation and reported for the resistance targets defined in `amr`
 
 The reference set is a directory supplied via [`--reference_db`]({{ site.baseurl }}/docs/v1.0/pages/inputs/#--reference_db) (default: `${projectDir}/assets/reference_db/`).
@@ -45,14 +46,16 @@ If it is not listed, supply the `species` column in the samplesheet for those sa
 
 ## Automated QC (NCBI genome statistics)
 
-Automated QC estimates sequencing depth using the mean genome length of the species from the bundled NCBI statistics file (`--ncbi_stats`). Check whether your species is included:
+Automated QC estimates sequencing depth from the species' expected genome length, and checks that each de novo assembly's length and GC content fall within the species' expected ranges. These come from the bundled NCBI statistics file (`--ncbi_stats`) unless they are set in the manifest ([Step 6](#step-6-set-automated-qc-ranges-optional)). Check whether your species is included, and what its ranges are:
 
 ```bash
-grep -o '"species_name": "<Genus> <species>"' CorgiSNPs/assets/ncbi_stats/2026-02-10_ncbi-fungal-sp.json
+grep -A 25 '"species_name": "<Genus> <species>"' CorgiSNPs/assets/ncbi_stats/2026-10-01_ncbi-fungal-sp.json
 ```
 
+The file only lists species with at least 2 NCBI genomes, and its ranges are used when the species has at least 3. Names are matched against the record's `names`, so a species listed under another name is found through the aliases in the manifest's `species` field.
+
 {: .important}
-If the species is not in the NCBI statistics file, estimated depth is undetermined and samples will fail automated QC. Assembly length and GC z-scores also require at least 3 NCBI genomes for the species.
+If the species is not in the NCBI statistics file and its manifest entry has no `length_range`, estimated depth is undetermined and samples will fail automated QC. Set `length_range` and `gc_range` in the manifest for these species.
 
 
 ---
@@ -99,14 +102,109 @@ Add guidance on how to choose `subtype_ani` for a new species (e.g., by comparin
 `ploidy` is passed to FreeBayes for variant calling and to polycore for core genome analysis. CorgiSNPs supports organisms from haploid through triploid.
 
 {: .important}
-[`--min_allele_fraction`]({{ site.baseurl }}/docs/v1.0/pages/inputs/#--min_allele_fraction) is set per run, not per species. The suggested value is `0.8` for haploid organisms and `0.25` for diploid / triploid organisms, so adjust it when running a non-haploid species.
+Set `min_allele_fraction` to match the ploidy in the species' [analysis settings](#step-5-set-analysis-settings-recommended): the suggested value is `0.8` for haploid organisms and `0.25` for diploid / triploid organisms. Because the value is set per species, haploid and non-haploid species can be analyzed in the same run.
 
 {: .todo}
 Add any additional guidance for diploid / triploid species.
 
 ---
 
-# Step 5: Add Antifungal Resistance Targets (Optional)
+# Step 5: Set Analysis Settings (Recommended)
+
+The variant calling and phylogenetic analysis thresholds can be set in the manifest, on the species entry, on a subtype, or both. Each setting uses the same name as its pipeline parameter. **Setting them in the manifest is the recommended approach**: the values that suit a species are stored with its reference genomes, every run uses them, and species with different needs (e.g., haploid and diploid) can be analyzed together in one run.
+
+For each sample, the most specific value wins:
+
+|Level|Where it is set|Applies to|
+|:-|:-|:-|
+|Subtype|On a subtype in `manifest.yml`|Samples on that subtype|
+|Species|On a species entry in `manifest.yml`|Samples on every subtype of the species, unless the subtype sets its own value|
+|Run|`--{parameter}`, `-params-file`, or `nextflow.config` (see [Inputs]({{ site.baseurl }}/docs/v1.0/pages/inputs/))|Samples whose species and subtype don't set the value|
+
+{: .important}
+A run-level parameter does **not** override a value set in the manifest. For example, `--min_allele_fraction 0.5` has no effect on a species whose manifest entry sets `min_allele_fraction`. To change a value for such a species, edit the manifest (or use a copy of the reference set via `--reference_db`).
+
+## Available settings
+
+|Setting|Type|Default (run level)|Used for|
+|:-|:-|:-|:-|
+|`limit_coverage`|Whole number, ≥ 1|`100`|Coverage cap for FreeBayes and `samtools mpileup`|
+|`min_base_depth`|Whole number, ≥ 0|`10`|`low_depth` filter and consensus masking|
+|`min_base_quality`|Whole number, ≥ 0|`30`|`low_base_qual` filter and consensus masking|
+|`min_mapping_quality`|Whole number, ≥ 0|`40`|`low_map_qual` filter|
+|`min_allele_fraction`|Number, 0-1|`0.8`|`low_af` filter|
+|`min_fwd_strand_fraction`|Number, 0-1|`0.3`|`strand_bias` filter|
+|`max_strand_bias`|Whole number, ≥ 0|`15`|`strand_bias` filter|
+|`max_read_pos_bias`|Whole number, ≥ 0|`30`|`read_pos_bias` filter|
+|`min_genome_fraction`|Number, 0-1|`0.9`|Minimum genome fraction for a sample to enter the core genome|
+|`min_core_fraction`|Number, 0-1|`0.9`|Minimum fraction of samples with data for a site to enter the core genome|
+|`strong_link_threshold`|Whole number, ≥ 0|`5`|Upper SNP distance for strong linkage|
+|`inter_link_threshold`|Whole number, ≥ 0|`10`|Upper SNP distance for intermediate linkage|
+|`partition_distance`|Whole number, ≥ 0|`25`|Distance threshold for tree partitions|
+
+See [Overview]({{ site.baseurl }}/docs/v1.0/pages/overview/#calling--filtering-variants) for how each filter is applied. We recommend setting **all** of them at the species level, even where the value matches the default. This records the full configuration for the species in one place and keeps its results the same if the pipeline defaults change. Use subtype-level values only where a subtype needs something different.
+
+```yaml
+- name: genus_species
+  species:
+    - Genus species
+  ploidy: 2
+  min_allele_fraction: 0.25     # species level: all subtypes
+  partition_distance: 25
+  subtypes:
+    - subtype: [Subtype A]
+      assembly: GCA_000000000.1.fna.gz
+      min_core_fraction: 0.95   # subtype level: Subtype A only
+    - subtype: [Subtype B]
+      assembly: GCA_000000001.1.fna.gz
+```
+
+## Things to know
+
+- **The startup log lists overrides.** At the start of each run, CorgiSNPs lists every subtype whose settings differ from the run-level values, so you can confirm what was applied.
+- **Samples with a supplied reference use run-level values.** Samples with a `reference` in the samplesheet don't use the manifest, so they use the run-level parameters.
+- **Each tree has one set of phylogenetic settings.** All samples in a species / subtype tree share its phylogenetic settings. If they disagree (e.g., a sample with a supplied reference alongside manifest samples), the run-level values are used for that tree and a warning is logged.
+- **Existing database genomes are not re-processed.** Changing variant calling settings does not change consensus genomes already saved in a [CorgiSNPs database]({{ site.baseurl }}/docs/v1.0/pages/outputs/db/), which are still included in later trees. Re-run those samples if they need to reflect the new settings.
+
+{: .todo}
+Add guidance on choosing values for a new species (e.g., `min_allele_fraction` for diploid / triploid organisms, and linkage thresholds based on the species' mutation rate and outbreak history).
+
+---
+
+# Step 6: Set Automated QC Ranges (Optional)
+
+A sample fails automated QC if its de novo assembly length or GC content falls outside its species' range. The ranges can be set on the species entry:
+
+|Field|Units|Description|
+|:-|:-|:-|
+|`length_range`|bp|`[min, max]` acceptable assembly length|
+|`gc_range`|%|`[min, max]` acceptable assembly GC content (0-100)|
+
+```yaml
+- name: genus_species
+  species:
+    - Genus species
+  length_range: [11000000, 13000000]
+  gc_range: [40.0, 49.5]
+```
+
+Each range is chosen separately:
+
+1. **Manifest** - used when the species entry sets it.
+2. **NCBI statistics** - otherwise, the range from `--ncbi_stats` is used if the species has at least 3 NCBI genomes. These ranges are the mean ± 2.58 standard deviations of the NCBI genomes for the species.
+3. **Neither** - the check is reported as undetermined (in `qc_reason`) and does not fail the sample.
+
+Set ranges in the manifest when the species has few or no NCBI genomes, or when the NCBI genomes don't represent the samples you sequence. The species' `length_range` and `gc_range` in the NCBI statistics file are a good starting point. For a species with no NCBI genomes, `length_range` is also used to estimate sequencing depth (from its midpoint), so set it to allow those samples to pass QC.
+
+{: .note}
+QC ranges can only be set on the species entry, not on a subtype. The source of each sample's ranges is reported in the `qc_range_source` [summary column]({B}/outputs/reports/#summary-columns).
+
+{: .todo}
+Add guidance on choosing ranges for a new species (e.g., how wide to make them relative to the NCBI values).
+
+---
+
+# Step 7: Add Antifungal Resistance Targets (Optional)
 
 Resistance targets are defined on a subtype with the `amr` field. A subtype with `amr` must also have an `annotation` (GFF), and each target's `gene` must match a gene name in that annotation. Coordinates are in the assembly's coordinates.
 
@@ -127,7 +225,7 @@ Add guidance on how to identify resistance genes, regions, and coordinates for a
 
 ---
 
-# Step 6: Write the Manifest
+# Step 8: Write the Manifest
 
 Add one entry per species to `manifest.yml`.
 
@@ -141,6 +239,9 @@ These apply to every subtype of the species; a subtype can override them.
 |`species`|Yes|List of species names. The first is preferred; the rest are aliases (e.g., older names). Samplesheet and GAMBIT species names are matched against all of them.|
 |`ploidy`|No|Ploidy used for variant calling.|
 |`subtype_ani`|No|ANI threshold for subtyping, as a fraction (e.g., `0.997`).|
+|`length_range`|No|Acceptable de novo assembly length for automated QC, in bp: `[min, max]` (see [Step 6](#step-6-set-automated-qc-ranges-optional)). Species level only.|
+|`gc_range`|No|Acceptable de novo assembly GC content for automated QC, in %: `[min, max]` (see [Step 6](#step-6-set-automated-qc-ranges-optional)). Species level only.|
+|Analysis settings|No|Variant calling and phylogenetic thresholds for every subtype (see [Step 5](#step-5-set-analysis-settings-recommended)).|
 |`subtypes`|Yes|One entry per subtype (below).|
 
 ## Subtype fields
@@ -150,8 +251,9 @@ These apply to every subtype of the species; a subtype can override them.
 |`subtype`|Yes|List of subtype names; must be unique within the species.|
 |`assembly`|Yes|Reference assembly (FASTA, may be gzipped). File in `<name>/assembly/`, or a path.|
 |`annotation`|No|Annotation for the assembly (GFF). File in `<name>/annotation/`, or a path. Required when `amr` is set.|
-|`amr`|No|Resistance targets (see [Step 5](#step-5-add-antifungal-resistance-targets-optional)).|
+|`amr`|No|Resistance targets (see [Step 7](#step-7-add-antifungal-resistance-targets-optional)).|
 |`primary`|No|`true` for the subtype whose resistance targets are used for samples on subtypes without `amr`. Only needed when more than one subtype has `amr`.|
+|Analysis settings|No|Variant calling and phylogenetic thresholds for this subtype only, overriding the species' values (see [Step 5](#step-5-set-analysis-settings-recommended)). QC ranges can't be set here.|
 
 Any other field is passed through to the pipeline unchanged.
 
@@ -167,6 +269,24 @@ Species and subtype names are compared after converting to lowercase and replaci
     - Genus species
   ploidy: 1
   subtype_ani: 0.997
+  # Automated QC
+  length_range: [11000000, 13000000]
+  gc_range: [40.0, 49.5]
+  # Variant calling
+  limit_coverage: 100
+  min_base_depth: 10
+  min_base_quality: 30
+  min_mapping_quality: 40
+  min_allele_fraction: 0.8
+  min_fwd_strand_fraction: 0.3
+  max_strand_bias: 15
+  max_read_pos_bias: 30
+  # Phylogenetics
+  min_genome_fraction: 0.9
+  min_core_fraction: 0.9
+  strong_link_threshold: 5
+  inter_link_threshold: 10
+  partition_distance: 25
   subtypes:
     - subtype: [Subtype A]
       assembly: GCA_000000000.1.fna.gz
@@ -185,7 +305,7 @@ Species and subtype names are compared after converting to lowercase and replaci
 
 ## Example: *Candidozyma auris*
 
-The bundled *C. auris* entry defines five clades, with resistance targets for the *FKS1* hot spot regions on Clade I:
+The bundled *C. auris* entry defines five clades, with resistance targets for the *FKS1* hot spot regions on Clade I. It sets every analysis setting at the species level, so run-level values for these parameters do not apply to *C. auris* samples. It does not set QC ranges, so *C. auris* samples are checked against the NCBI ranges:
 
 ```yaml
 ## Candidozyma auris
@@ -195,6 +315,21 @@ The bundled *C. auris* entry defines five clades, with resistance targets for th
     - Candida auris
   ploidy: 1
   subtype_ani: 0.997
+  # Variant calling
+  limit_coverage: 100
+  min_base_depth: 10
+  min_base_quality: 30
+  min_mapping_quality: 40
+  min_allele_fraction: 0.8
+  min_fwd_strand_fraction: 0.3
+  max_strand_bias: 15
+  max_read_pos_bias: 30
+  # Phylogenetics
+  min_genome_fraction: 0.9
+  min_core_fraction: 0.9
+  strong_link_threshold: 5
+  inter_link_threshold: 10
+  partition_distance: 25
   subtypes:
     - subtype: [Clade I]
       assembly: GCA_016772135.1.fna.gz
@@ -221,13 +356,13 @@ The bundled *C. auris* entry defines five clades, with resistance targets for th
 ```
 
 {: .todo}
-Add the rationale for the *C. auris* reference assemblies and `subtype_ani` value.
+Add the rationale for the *C. auris* reference assemblies, `subtype_ani` value, and analysis settings, and whether its QC ranges should be fixed in the manifest.
 
 ---
 
-# Step 7: Validate & Test
+# Step 9: Validate & Test
 
-The reference set is validated at the start of every run (unless `--validate_refs false`). Validation checks required fields, allowed `name` characters, unique names and subtypes, that files exist, that `amr` subtypes have an `annotation` and a `gene` for every target, and that a single primary subtype is set when needed. All problems are reported in a single error.
+The reference set is validated at the start of every run (unless `--validate_refs false`). Validation checks required fields, allowed `name` characters, unique names and subtypes, that files exist, that `amr` subtypes have an `annotation` and a `gene` for every target, that a single primary subtype is set when needed, that analysis settings are numbers of the right type and range (e.g., `min_allele_fraction` from 0 to 1), and that `length_range` and `gc_range` are `[min, max]` pairs with min ≤ max, set only on species entries. All problems are reported in a single error.
 
 Run CorgiSNPs with your reference set:
 
