@@ -42,7 +42,7 @@ Samples without a `species` in the samplesheet are classified using the bundled 
 grep -i "<Genus> <species>" CorgiSNPs/assets/gambit_db/gambit-1.0.0-20241213-taxa-list.txt
 ```
 
-If it is not listed, supply the `species` column in the samplesheet for those samples.
+If it is not listed, supply the `species` column in the samplesheet for those samples. Otherwise they will not get a species-level call, and they will fail QC and be excluded from downstream analysis.
 
 ## Automated QC (NCBI genome statistics)
 
@@ -90,7 +90,7 @@ Add guidance on selecting reference assemblies for a species: recommended source
 
 # Step 3: Set the Subtype ANI Threshold
 
-`subtype_ani` is the minimum ANI (as a fraction, e.g., `0.997`) between a sample and its closest subtype reference for the subtype to be assigned. Samples below the threshold are `undefined`, which stops the pipeline. If no value is set, `0.997` is used. If subtypes of the same species have different values, the highest (strictest) value is used for the species.
+`subtype_ani` is the minimum ANI (as a fraction, e.g., `0.997`) between a sample and its closest subtype reference for the subtype to be assigned. Samples below the threshold are `undefined`; they fail QC and are excluded from downstream analysis, but the rest of the run continues. If no value is set, `0.997` is used. If subtypes of the same species have different values, the highest (strictest) value is used for the species.
 
 {: .todo}
 Add guidance on how to choose `subtype_ani` for a new species (e.g., by comparing ANI within and between subtypes for a set of known genomes).

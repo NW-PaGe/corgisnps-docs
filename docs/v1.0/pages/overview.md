@@ -66,7 +66,7 @@ Samples without a species are classified using [GAMBIT](https://github.com/jlump
 Samples without a subtype are compared to the reference assemblies for their species. Each reference assembly is sketched with [sourmash](https://sourmash.readthedocs.io/en/latest/) (`ksize=31`, `scaled=100`), and the sample is assigned the subtype of the reference with the highest average nucleotide identity (ANI), provided the ANI meets the species' `subtype_ani` threshold (default: `0.997`). Otherwise, the subtype is `undefined`.
 
 {: .important}
-Any sample that cannot be matched to a reference - because no species-level call was made, no reference set exists for the species, or the subtype could not be determined - stops the pipeline. All affected samples are listed in a single error message.
+Any sample that cannot be matched to a reference - because no species-level call was made, no reference set exists for the species, or the subtype could not be determined - does **not** stop the pipeline. All affected samples are listed in a single warning in the run log. They are still included in the [run summary]({{ site.baseurl }}/docs/v1.0/pages/outputs/reports/#run-summary) with `qc_status` set to `FAIL` and the reason in `qc_reason` (e.g., `Classification: subtype could not be determined for species 'candidozyma_auris'`), but they are not passed to variant calling, resistance detection, or phylogenetic analysis. To analyze such a sample, supply its `species` and `subtype` in the samplesheet or add its species / subtype to the [reference set](../reference_sets/).
 
 ---
 
@@ -77,6 +77,7 @@ Each sample is summarized and evaluated against the following criteria. Samples 
 |Check|Criterion|
 |:-|:-|
 |Read quality|Q30 rate after filtering ≥ `min_q30_rate_qc` (default: `0.8`)|
+|Classification|The sample was matched to a reference (see [Subtyping](#subtyping))|
 |Species|A species was supplied or assigned|
 |Subtype|A subtype was supplied or assigned|
 |Estimated depth|Total bases after filtering ÷ expected genome length for the species ≥ `min_depth_qc` (default: `30`)|

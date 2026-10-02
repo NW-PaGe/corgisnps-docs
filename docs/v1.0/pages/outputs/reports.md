@@ -240,7 +240,7 @@ A maximum likelihood phylogenetic tree is produced per species / subtype when th
 Summary tables are produced at two levels: per sample / run and per species / subtype.
 
 ## Run Summary
-A run-level summary table is published at the top of the output directory. It combines the sample summaries for every sample in the run, including samples that failed QC.
+A run-level summary table is published at the top of the output directory. It combines the sample summaries for every sample in the run, including samples that failed QC or could not be matched to a reference.
 ```bash
 ${outdir}/
 ├── sample
@@ -269,7 +269,7 @@ The sample and run summary files contain the following columns.
 | `sample` | Sample identifier (same as supplied in samplesheet) |
 | `status` | Whether the sample was added in the current run (`new`) |
 | `qc_status` | Automated QC result (`PASS` / `FAIL`) |
-| `qc_reason` | Reasons for QC failure, grouped as undetermined, failed, or errored checks |
+| `qc_reason` | Reasons for QC failure, grouped as classification (sample could not be matched to a reference), undetermined, failed, or errored checks |
 | `species` | Species (from samplesheet or GAMBIT) |
 | `subtype` | Subtype (from samplesheet or subtyping) |
 | `subtype_ani` | ANI (%) to the closest subtype reference |
