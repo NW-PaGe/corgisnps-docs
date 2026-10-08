@@ -17,13 +17,9 @@ nav_order: -20261008
 
 ---
 
-# Why compare?
+# Overview
 
-- CorgiSNPs [builds on MycoSNP]({{ site.baseurl }}/docs/v1.0/pages/overview/), so labs moving from one to the other will want to know whether their current hardware is still enough.
-- Many public health labs run these pipelines on a single workstation or a small cluster, so peak memory and total runtime matter as much as accuracy.
-- Goal of this post: give a fair, reproducible side-by-side of compute cost.
-
-**On the CDC MycoSNP full test dataset, CorgiSNPs finished 2.27× faster, used 1.67× less CPU time, and cost 1.64× less to run than MycoSNP.**
+Resource usage was compared between CorgiSNPs and the CDC MycoSNP pipeline using the MycoSNP [full test dataset](https://github.com/CDCgov/mycosnp-nf/blob/master/assets/sra_large.csv). CorgiSNPs was found to be 2.27× faster, use 1.67× less CPU time, and cost 1.64× less than MycoSNP.
 
 ---
 
