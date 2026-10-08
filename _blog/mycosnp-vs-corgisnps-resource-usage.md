@@ -86,7 +86,7 @@ How these are calculated:
 
 # Takeaway
 
-- On the same 24 samples and the same AWS infrastructure, CorgiSNPs completed in a single run while using less time, CPU, memory, I/O, and money than MycoSNP's three runs, and without the manual steps of picking a reference and splitting out the clade IV sample.
+On the same 24 samples and the same AWS infrastructure, CorgiSNPs completed in a single run while using less time, CPU, memory, I/O, and money than MycoSNP's three runs, and without the manual steps of picking a reference and splitting out the clade IV sample.
 
 ---
 
