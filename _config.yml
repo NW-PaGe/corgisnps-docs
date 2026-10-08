@@ -11,6 +11,19 @@ favicon_ico: "/assets/media/corgisnps_logo.ico"
 aux_links:
   CorgiSNPs GitHub: https://github.com/NW-PaGe/CorgiSNPs
 
+# Blog posts live in `_blog/` and get their own "Posts" section in the
+# sidebar, below the version docs. See `_blog/index.md` for how to add one.
+collections:
+  blog:
+    permalink: "/posts/:path/"
+    output: true
+
+just_the_docs:
+  collections:
+    blog:
+      name: Posts
+      nav_fold: false
+
 callouts:
   note:
     title: Note
