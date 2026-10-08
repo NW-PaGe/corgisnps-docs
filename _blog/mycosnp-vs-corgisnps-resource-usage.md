@@ -19,7 +19,7 @@ nav_order: -20261008
 
 # Overview
 
-Resource usage was compared between CorgiSNPs and the CDC MycoSNP pipeline using the MycoSNP [full test dataset](https://github.com/CDCgov/mycosnp-nf/blob/master/assets/sra_large.csv). CorgiSNPs was found to be 2.27× faster, use 1.67× less CPU time, and cost 1.64× less than MycoSNP.
+Resource usage was compared between CorgiSNPs and the CDC MycoSNP pipeline using the MycoSNP [full test dataset](https://github.com/CDCgov/mycosnp-nf/blob/master/assets/sra_large.csv). **CorgiSNPs was found to be 2.27× faster, use 1.67× less CPU time, and cost 1.64× less than MycoSNP.**
 
 ---
 
@@ -44,9 +44,6 @@ Both workflows were run on **Seqera Cloud** using **AWS** compute, with the same
 # What we measured
 
 All metrics come from the **Seqera Cloud run metrics** for each run.
-
-{: .todo}
-Confirm the metric names and units shown in Seqera Cloud, and match them to the column headers in [Results](#results).
 
 |Metric|Why it matters|
 |:-|:-|
@@ -92,9 +89,6 @@ How these are calculated:
 ---
 
 # Reproduce it yourself
-
-{: .todo}
-Confirm the Seqera Cloud compute environment and any extra parameters used in each run.
 
 Both pipelines were launched from Seqera Cloud against an AWS compute environment. The equivalent command-line runs are:
 
