@@ -35,6 +35,20 @@ CorgiSNPs is currently tested with *Candidozyma auris* (*Candida auris*). It bui
 ## Flowchart
 ![]({{ site.baseurl }}/docs/v1.0/media/corgisnps-v1.0.png)
 
+## CorgiSNPs vs. MycoSNP
+![10 MycoSNP runs vs 1 CorgiSNPs run]({{ site.baseurl }}/docs/v1.0/media/mycosnp-vs-corgisnps.svg)
+
+A single CorgiSNPs run can replace up to 10 MycoSNP runs. For *C. auris* samples spanning clades I–V, MycoSNP requires:
+
+1. **One pre-MycoSNP run** to determine each sample's clade.
+2. **Up to five clade-specific runs**, one per clade, each using that clade's reference genome to build its phylogeny.
+3. **Up to four more runs** in which all non-clade I samples are re-run against the clade I reference to detect *FKS1* mutations, because MycoSNP's SnpEff database is built from the clade I reference.
+
+CorgiSNPs handles all of this in one run: it assigns each sample's subtype automatically, calls variants and builds phylogenies against subtype-specific references, and detects resistance mutations in non-primary subtypes by re-calling only the target regions against the primary reference (see [Antifungal Resistance](#antifungal-resistance)).
+
+{: .note}
+To learn more about how this affects compute time and resources, see [MycoSNP vs. CorgiSNPs: Resource Usage]({{ site.baseurl }}/posts/mycosnp-vs-corgisnps-resource-usage/).
+
 ---
 
 # Inputs
