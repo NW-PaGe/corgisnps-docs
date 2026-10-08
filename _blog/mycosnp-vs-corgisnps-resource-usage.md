@@ -31,7 +31,7 @@ Both workflows were run on **Seqera Cloud** using **AWS** compute, with the same
 |:-|:-|:-|
 |Version / commit|`CDCgov/mycosnp-nf` v1.6.3 @ [`39eafa6`](https://github.com/CDCgov/mycosnp-nf/commit/39eafa650ab439665fe61b1d44d754eba700d981)|`NW-PaGe/CorgiSNPs` main @ [`02aa425`](https://github.com/NW-PaGe/CorgiSNPs/commit/02aa42594523a80456da548aa82db1aaecd189f9)|
 |Nextflow version|26.04.6 build 12646|same|
-|Platform|Seqera Cloud, AWS (compute environment TBD)|same|
+|Platform|Seqera Cloud, AWS |same|
 |Runs|Three runs: `PRE_MYCOSNP` over all samples, `NFCORE_MYCOSNP` over all samples (clade I reference), and `NFCORE_MYCOSNP` over the single clade IV sample (clade IV reference)|One run (`NWPAGE_CORGISNPS`) over all samples|
 |Reference|Clade I, [GCA_016772135.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_016772135.1/), for all samples (needed for *FKS1* detection); clade IV, [GCA_003014415.1](https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_003014415.1/), for B12847|Reference set (subtype-matched), selected automatically; clade I samples use GCA_016772135.1 and B12847 uses GCA_003014415.1|
 
